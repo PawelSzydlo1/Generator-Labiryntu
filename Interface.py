@@ -88,17 +88,19 @@ class Interface():
         self.value2.set((self.xKoniec-self.wSiatki,self.yKoniec-self.wSiatki))
         self.okno.update()
     def przycisk(self):
-        self.canvas = Canvas(self.okno, width=(int(self.widthMaze.get()) + 2) * self.wSiatki,height=(int(self.heightMaze.get()) + 2) * self.wSiatki)
+
+        self.downFrame=Frame(self.okno)
+
+        self.canvas = Canvas(self.downFrame, width=(int(self.widthMaze.get()) + 2) * self.wSiatki,height=(int(self.heightMaze.get()) + 2) * self.wSiatki)
         self.canvas.pack(side=BOTTOM)
         self.buduj_Siatke(int(self.widthMaze.get()),int(self.heightMaze.get()))
         self.canvas.bind("<Button-1>", self.lewyPrzycisk)
         self.canvas.bind("<Button-3>", self.prawyPrzycisk)
 
 
-
-        PrzyciskNowy = Button(self.okno, text="Nowy Labirynt", width=20, command=self.wywolaj)
+        PrzyciskNowy = Button(self.downFrame, text="Nowy Labirynt", width=20, command=self.wywolaj)
         PrzyciskNowy.pack(side=BOTTOM)
-
+        self.downFrame.pack(side=BOTTOM)
 
 
     def buduj_Siatke(self,M,N):
