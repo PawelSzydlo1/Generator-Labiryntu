@@ -1,223 +1,155 @@
-from tkinter import *
-import time
+from tkinter import Toplevel
+from tkinter import Label
+from tkinter import Button
+from tkinter import Canvas
+from tkinter import BOTTOM, TOP, CENTER
+from stale import *
+from HelperFunction import *
 import random
 
-class Labirynt():
-    def wywolaj(self):
-        self.okno.destroy()
 
-    def __init__(self, M=1, N=1,rodzic=None,xStart=None,yStart=None,xKoniec=None,yKoniec=None):
-        self.okno = Toplevel(rodzic)
-        self.okno.title("GL - Wizualizacja")
-        self.okno.geometry("800x800")
-        self.okno.resizable(width=False, height=False)
-        self.M=M
-        self.N=N
-        self.grid=[]
-        self.stack=[]
-        self.visited=[]
-        self.solution={}
-        self.wSiatki=20  #szerokośc korytarzu
-        self.a=0
-        self.b=0
-        self.xStart=xStart
-        self.yStart=yStart
-        self.xKoniec=xKoniec
-        self.yKoniec=yKoniec
-        self.x=0
-        self.y=0
+class Maze:
+    grid = []
+    solution = {}
 
-        PrzyciskClose = Button(self.okno, text="Close Project", width=20, command=self.wywolaj)
-        PrzyciskClose.pack(side=BOTTOM)
+    def __init__(self, m=1, n=1, parent=None, x_start=None, y_start=None, x_finish=None, y_finish=None):
+        self.window = Toplevel(parent)
+        self.canvas = Canvas(self.window, width=(m + 2) * WIDTH_HOL, height=(n + 2) * WIDTH_HOL, bg="blue")
+        self.initialize_window(m)
 
-        self.canvas = Canvas(self.okno,width=(M+2)*self.wSiatki, height=(N+2)*self.wSiatki,bg="blue")
-        self.canvas.place(x=(800-(M+2)*self.wSiatki)/2, y=100)
+        self.draw_maze(m, n)
 
+        self.create_maze(x_start, y_start)
+        self.draw_solution_plot(x_finish, y_finish, x_start, y_start)
+        self.hero = self.canvas.create_oval(
+            (x_start + 3, y_start + 3, x_start + WIDTH_HOL - 6, y_start + WIDTH_HOL - 6), fill="#000000")
+        self.x_hero = x_start
+        self.y_hero = y_start
 
+        self.window.mainloop()
 
-        label = Label(self.okno, font=("Times New Roman", 12), text="Labirynt", justify=CENTER)
+    def initialize_window(self, m):
+        self.window.title("Maze")
+        self.window.geometry("{}x{}".format(WIDTH, HEIGHT))
+        self.window.resizable(width=False, height=False)
+        self.window.bind("<KeyPress-Left>", lambda _: self.hero_left())
+        self.window.bind("<KeyPress-Right>", lambda _: self.hero_right())
+        self.window.bind("<KeyPress-Up>", lambda _: self.hero_up())
+        self.window.bind("<KeyPress-Down>", lambda _: self.hero_down())
+        button_close = Button(self.window, text="Close Project", width=20, command=self.close_maze)
+        button_close.pack(side=BOTTOM)
+        self.canvas.place(x=(WIDTH - (m + 2) * WIDTH_HOL) / 2, y=HEIGHT / 8)
+        label = Label(self.window, text="Labirynt", justify=CENTER)
         label.pack(side=TOP)
 
-        self.buduj_Siatke(M,N)
+    def check_coordinate_hero(self, a, b, a1, b1):
+        if self.canvas.find_overlapping(self.x_hero + a, self.y_hero + b, self.x_hero + a1, self.y_hero + b1) == ():
+            return True
+        else:
+            return False
 
+    def hero_up(self):
+        if self.check_coordinate_hero(2, -2, 4, 2):
+            self.y_hero -= WIDTH_HOL
+            self.canvas.move(self.hero, 0, - WIDTH_HOL)
 
-        self.carve_out_maze(self.xStart,self.yStart)
-        self.plot_route_back(self.xKoniec,self.yKoniec,self.xStart,self.yStart)
+    def hero_down(self):
+        if self.check_coordinate_hero(2, WIDTH_HOL + 2, 4, WIDTH_HOL - 2):
+            self.y_hero += WIDTH_HOL
+            self.canvas.move(self.hero, 0, WIDTH_HOL)
 
-        self.Postac=self.canvas.create_oval((xStart+3, yStart+3, xStart + self.wSiatki-6, yStart + self.wSiatki-6), fill="#000000")
-        self.okno.update()
-        self.x2 = xStart
-        self.y2 = yStart
+    def hero_left(self):
+        if self.check_coordinate_hero(-2, 4, 2, 6):
+            self.x_hero -= WIDTH_HOL
+            self.canvas.move(self.hero, - WIDTH_HOL, 0)
 
-        self.okno.bind("<KeyPress-Left>", lambda e: self.left(e))
-        self.okno.bind("<KeyPress-Right>", lambda e: self.right(e))
-        self.okno.bind("<KeyPress-Up>", lambda e: self.up(e))
-        self.okno.bind("<KeyPress-Down>", lambda e: self.down(e))
+    def hero_right(self):
+        if self.check_coordinate_hero(WIDTH_HOL + 2, 2, WIDTH_HOL - 2, 4):
+            self.x_hero += WIDTH_HOL
+            self.canvas.move(self.hero, WIDTH_HOL, 0)
 
-        print("Kurde koniec")
-        self.okno.mainloop()
+    def draw_maze(self, m, n):
+        y = WIDTH_HOL
+        for i in range(1, m + 1):
+            x = WIDTH_HOL
 
-    def up(self,event):
+            for j in range(1, n + 1):
+                if check_coordinate_line(self.canvas, x, y, 2, - 2, 4, 2):
+                    self.canvas.create_line((x, y, x + WIDTH_HOL, y), width=2)
+                if check_coordinate_line(self.canvas, x, y, WIDTH_HOL + 2, 2, WIDTH_HOL - 2, 4):
+                    self.canvas.create_line((x + WIDTH_HOL, y, x + WIDTH_HOL, y + WIDTH_HOL), width=2)
+                if check_coordinate_line(self.canvas, x, y, 2, WIDTH_HOL + 2, 4, WIDTH_HOL - 2):
+                    self.canvas.create_line((x, y + WIDTH_HOL, x + WIDTH_HOL, y + WIDTH_HOL), width=2)
+                if check_coordinate_line(self.canvas, x, y, - 2, 4, 2, 6):
+                    self.canvas.create_line((x, y, x, y + WIDTH_HOL), width=2)
+                self.window.update()
+                self.grid.append((x, y))
+                x = x + WIDTH_HOL
+            y = y + WIDTH_HOL
 
-        if(self.canvas.find_overlapping(self.x2 + 2, self.y2 - 2, self.x2 + 4, self.y2 + 2) == ()):
-
-            print("up",self.x2,self.y2)
-            self.x=0
-            self.y=-self.wSiatki
-            self.x2=self.x2+self.x
-            self.y2=self.y2+self.y
-            self.canvas.move(self.Postac, self.x , self.y )
-
-    def down(self,event):
-
-        if (self.canvas.find_overlapping(self.x2 + 2, self.y2 + self.wSiatki + 2, self.x2 + 4, self.y2 + self.wSiatki - 2) == ()):
-
-            print("down",self.x2,self.y2)
-            self.x=0
-            self.y=self.wSiatki
-            self.x2 = self.x2 + self.x
-            self.y2 = self.y2 + self.y
-            self.canvas.move(self.Postac, self.x , self.y )
-
-    def left(self,event):
-
-        if (self.canvas.find_overlapping(self.x2 - 2, self.y2 + 4, self.x2 + 2, self.y2 + 6) == ()):
-
-            print("l",self.x2,self.y2)
-            self.x=-self.wSiatki
-            self.y=0
-            self.x2 = self.x2 + self.x
-            self.y2 = self.y2 + self.y
-            self.canvas.move(self.Postac, self.x , self.y )
-
-    def right(self,event):
-
-        if (self.canvas.find_overlapping(self.x2 + self.wSiatki + 2, self.y2 + 2, self.x2 + self.wSiatki - 2, self.y2 + 4) == ()):
-
-            print("r",self.x2,self.y2)
-            self.x=self.wSiatki
-            self.y=0
-            self.x2 = self.x2 + self.x
-            self.y2 = self.y2 + self.y
-            self.canvas.move(self.Postac, self.x, self.y)
-
-
-    def buduj_Siatke(self,M,N):
-        y=self.wSiatki
-        for i in range(1,M+1):
-            x=self.wSiatki
-
-            for j in range(1,N+1):
-                if(self.canvas.find_overlapping(x+2,y-2,x+4,y+2)==()):
-                    #print("gora")
-                    self.canvas.create_line((x, y, x+self.wSiatki, y), width = 2)
-
-                if (self.canvas.find_overlapping(x + self.wSiatki+2, y+2,x + self.wSiatki-2, y+4)==()):
-                    #print("pra")
-                    self.canvas.create_line((x + self.wSiatki, y, x+self.wSiatki, y+ self.wSiatki), width = 2)
-                if (self.canvas.find_overlapping(x+2 , y+ self.wSiatki+2,x+4 , y+ self.wSiatki-2)==()):
-                    #print("dol")
-                    self.canvas.create_line((x , y+ self.wSiatki, x+self.wSiatki, y+ self.wSiatki), width = 2)
-                if (self.canvas.find_overlapping(x-2 , y+4,x+2 , y+6)==()):
-                    #print("le")
-                    self.canvas.create_line((x, y, x, y+ self.wSiatki), width = 2)
-                self.okno.update()
-                self.grid.append((x,y))
-                x=x+self.wSiatki
-            y=y+self.wSiatki
-
-
-    def carve_out_maze(self,x, y):
-        self.single_cell(x, y)
-        self.stack.append((x, y))
-        self.visited.append((x, y))
-        while len(self.stack) > 0:
+    def create_maze(self, x, y):
+        stack = [(x, y)]
+        visited = [(x, y)]
+        while len(stack) > 0:
             cell = []
-            if (x + self.wSiatki, y) not in self.visited and (x + self.wSiatki, y) in self.grid:
-                cell.append("right")  # if yes add to cell list
+            if (x + WIDTH_HOL, y) not in visited and (x + WIDTH_HOL, y) in self.grid:
+                cell.append("right")
 
-            if (x - self.wSiatki, y) not in self.visited and (x - self.wSiatki, y) in self.grid:
+            if (x - WIDTH_HOL, y) not in visited and (x - WIDTH_HOL, y) in self.grid:
                 cell.append("left")
 
-            if (x, y + self.wSiatki) not in self.visited and (x, y + self.wSiatki) in self.grid:
+            if (x, y + WIDTH_HOL) not in visited and (x, y + WIDTH_HOL) in self.grid:
                 cell.append("down")
 
-            if (x, y - self.wSiatki) not in self.visited and (x, y - self.wSiatki) in self.grid:
+            if (x, y - WIDTH_HOL) not in visited and (x, y - WIDTH_HOL) in self.grid:
                 cell.append("up")
 
             if len(cell) > 0:
                 cell_chosen = (random.choice(cell))
 
                 if cell_chosen == "right":
-                    self.push_right(x, y)
-                    self.solution[(x + self.wSiatki, y)] = x, y
-                    x = x + self.wSiatki
-                    self.visited.append((x, y))
-                    self.stack.append((x, y))
+                    self.clear_line(x + WIDTH_HOL + 2, y + 2, x + WIDTH_HOL - 2, y + 4)
+                    self.solution[(x + WIDTH_HOL, y)] = x, y
+                    x = x + WIDTH_HOL
 
                 elif cell_chosen == "left":
-                    self.push_left(x, y)
-                    self.solution[(x - self.wSiatki, y)] = x, y
-                    x = x - self.wSiatki
-                    self.visited.append((x, y))
-                    self.stack.append((x, y))
+                    self.clear_line(x - 2, y + 4, x + 2, y + 6)
+                    self.solution[(x - WIDTH_HOL, y)] = x, y
+                    x = x - WIDTH_HOL
 
                 elif cell_chosen == "down":
-                    self.push_down(x, y)
-                    self.solution[(x, y + self.wSiatki)] = x, y
-                    y = y + self.wSiatki
-                    self.visited.append((x, y))
-                    self.stack.append((x, y))
+                    self.clear_line(x + 2, y + WIDTH_HOL + 2, x + 4, y + WIDTH_HOL - 2)
+                    self.solution[(x, y + WIDTH_HOL)] = x, y
+                    y = y + WIDTH_HOL
 
                 elif cell_chosen == "up":
-                    self.push_up(x, y)
-                    self.solution[(x, y - self.wSiatki)] = x, y
-                    y = y - self.wSiatki
-                    self.visited.append((x, y))
-                    self.stack.append((x, y))
+                    self.clear_line(x + 2, y - 2, x + 4, y + 2)
+                    self.solution[(x, y - WIDTH_HOL)] = x, y
+                    y = y - WIDTH_HOL
+
+                visited.append((x, y))
+                stack.append((x, y))
             else:
-                x, y = self.stack.pop()
-                self.single_cell(x, y)
-                self.backtracking_cell(x, y)
+                x, y = stack.pop()
 
-
-
-
-    def push_up(self,x,y):
-
-        tym=self.canvas.find_overlapping(x+2,y-2,x+4,y+2)
+    def clear_line(self, x1, y1, x2, y2):
+        tym = self.canvas.find_overlapping(x1, y1, x2, y2)
         self.canvas.delete(tym)
+        self.window.update()
 
-        self.okno.update()
-    def push_down(self,x,y):
-        tym = self.canvas.find_overlapping(x+2 , y+ self.wSiatki+2,x+4 , y+ self.wSiatki-2)
-        self.canvas.delete(tym)
+    def draw_solution_cell(self, x, y, x_finish, y_finish):
+        if x == x_finish and y == y_finish:
+            self.canvas.create_rectangle((x + 6, y + 6, x + WIDTH_HOL - 6, y + WIDTH_HOL - 6), fill="#00ff00", width=0)
+        else:
+            self.canvas.create_oval((x + 8, y + 8, x + WIDTH_HOL - 8, y + WIDTH_HOL - 8), fill="#00ff00", width=0)
+            self.window.update()
 
-        self.okno.update()
-    def push_left(self, x, y):
-        tym = self.canvas.find_overlapping(x-2 , y+4,x+2 , y+6)
-        self.canvas.delete(tym)
+    def draw_solution_plot(self, x_finish, y_finish, x_start, y_start):
+        x, y = x_finish, y_finish
+        self.draw_solution_cell(x, y, x_finish, y_finish)
+        while (x, y) != (x_start, y_start):
+            x, y = self.solution[x, y]
+            self.draw_solution_cell(x, y, x_finish, y_finish)
 
-        self.okno.update()
-    def push_right(self, x, y):
-        tym = self.canvas.find_overlapping(x + self.wSiatki+2, y+2,x + self.wSiatki-2, y+4)
-        self.canvas.delete(tym)
-
-
-        self.okno.update()
-    def single_cell(self,x,y):
-        #self.canvas.create_rectangle((x + 1, y + 1, x + self.wSiatki - 1, y + self.wSiatki - 1), fill="#0000ff", width = 0)
-        self.okno.update()
-    def backtracking_cell(self,x,y):
-        #self.canvas.create_rectangle((x + 1, y + 1, x + self.wSiatki - 1, y + self.wSiatki - 1), fill="#ff0000", width = 0)
-        self.okno.update()
-    def solution_cell(self,x,y):
-        self.canvas.create_oval((x + 8, y + 8, x + self.wSiatki - 8, y + self.wSiatki -8), fill="#00ff00", width = 0)
-        self.okno.update()
-    def plot_route_back(self,x,y,x1,x2):
-        self.solution_cell(x,y)
-        while (x,y)!=(x1,x2):
-            x,y=self.solution[x,y]
-            self.solution_cell(x,y)
-
-
+    def close_maze(self):
+        self.window.destroy()
