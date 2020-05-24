@@ -10,8 +10,11 @@ from HelperFunction import *
 class Interface:
 
     def play_maze(self):
+        """
+        Obsłyga przycisku New Button
+        """
 
-        Maze(self.width_maze, self.height_maze, self.window, self.x_start, self.y_start,
+        Maze(self.height_maze, self.width_maze, self.window, self.x_start, self.y_start,
              self.x_finish, self.y_finish)
         self.window.quit()
 
@@ -27,6 +30,7 @@ class Interface:
         self.y_finish = 0
         self.x_start = 0
         self.y_start = 0
+        self.iter = 1
 
         self.warning = StringVar("")
         warning_label = Label(self.window, textvariable=self.warning, font=("Times New Roman", 14))
@@ -77,6 +81,9 @@ class Interface:
         self.window.mainloop()
 
     def left_click_mouse(self, event):
+        """
+        Obsługa lewego przycisku myszy
+        """
         if event.x < WIDTH_HOL or event.x > self.canvas.winfo_width() - WIDTH_HOL - 3  \
                 or event.y < WIDTH_HOL or event.y > self.canvas.winfo_height() - WIDTH_HOL - 3:
             self.warning.set("Wyszedłes poza labirynt")
@@ -91,6 +98,9 @@ class Interface:
             self.window.update()
 
     def right_click_mouse(self, event):
+        """
+        Obsługa prawego przycisku myszy
+        """
         if event.x < WIDTH_HOL or event.x > self.canvas.winfo_width() - WIDTH_HOL - 3 \
                 or event.y < WIDTH_HOL or event.y > self.canvas.winfo_height() - WIDTH_HOL - 3:
             self.warning.set("Wyszedłes poza labirynt")
@@ -106,6 +116,9 @@ class Interface:
             self.window.update()
 
     def input_is_valid(self):
+        """
+        Sprawdzenie czy zostały podane wymiary labiryntu
+        """
         if self.width_maze_entry.get() == '' or self.height_maze_entry.get() == '':
             self.warning.set("Nie podałeś wartości")
             self.window.update()
@@ -121,12 +134,15 @@ class Interface:
         return False
 
     def button_action(self):
-        if self.input_is_valid():
+        """
+        Obsługa przycisku ok
+        """
+        if self.input_is_valid() and self.iter == 1:
             down_frame = Frame(self.window)
             self.canvas = Canvas(down_frame, width=(self.width_maze + 2) * WIDTH_HOL,
                                  height=(self.height_maze + 2) * WIDTH_HOL)
             self.canvas.pack(side=BOTTOM)
-            self.draw_maze(self.width_maze, self.height_maze)
+            self.draw_maze(self.height_maze, self.width_maze)
             self.canvas.bind("<Button-1>", self.left_click_mouse)
             self.canvas.bind("<Button-3>", self.right_click_mouse)
 
@@ -134,8 +150,12 @@ class Interface:
 
             down_frame.pack(side=BOTTOM)
             new_button.pack(side=BOTTOM)
+            self.iter += 1
 
     def draw_maze(self, m, n):
+        """
+        Rysowanie pustej siatki  o zadanych wymiarach
+        """
         y = WIDTH_HOL
         for a in range(1, m + 1):
             x = WIDTH_HOL
