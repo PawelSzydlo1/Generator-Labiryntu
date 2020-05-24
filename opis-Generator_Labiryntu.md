@@ -14,14 +14,6 @@ pola będące korytarzem które sąsiadują krawędzią z danym polem.
 - Wygenerowany labirynt powinien posiadać ścieżkę od wejścia do wyjścia, która
 nie będzie linią prostą (poziomą lub pionową) i która powinna być zaznaczona na
 wizualizacji.
-- Przechowywana jest lista punktów pośrednich ścieżki prowadzącej od wejścia do
-wyjścia.
-- Po wybraniu dowolnego pola będącego korytarzem, dodawane jest ono na
-koniec listy punktów pośrednich. Następnie powinna zostać znaleziona i
-zaznaczona najkrótsza ścieżka prowadząca z wejścia do wyjścia przez wszystkie
-punkty pośrednie.
-- Wybranie pola będącego punktem pośrednim powoduje usunięcie danego punktu
-pośredniego.
 - Labirynt nie może posiadać żadnego „pokoju‟: obszar 2 na 2 pola korytarza (lub
 większy).
 - Labirynt nie może posiadać żadnych obszarów 3 na 3 pola ściany (lub większych).
